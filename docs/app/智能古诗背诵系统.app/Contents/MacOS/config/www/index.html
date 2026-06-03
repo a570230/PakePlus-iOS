@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能古诗背诵系统 - 兼容版</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{ font-family:微软雅黑; background:#f5f7fa; margin:0; padding:20px; }
+.header{ background:#2c3e50; color:white; padding:20px; border-radius:12px; }
+input,textarea,select{ width:100%; padding:12px; margin-top:8px; box-sizing:border-box; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+input:focus, textarea:focus { border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.2); }
+button{ padding:10px 16px; border:none; border-radius:8px; cursor:pointer; margin-top:10px; }
+.primary{ background:#3498db; color:white; }
+.success{ background:#27ae60; color:white; }
+.warning{ background:#f39c12; color:white; }
+.danger{ background:#e74c3c; color:white; }
+.purple{ background:#a55eea; color:white; } 
+.panel{ background:white; padding:20px; margin-top:20px; border-radius:12px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin-top: 10px; }
+.stat-card { background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+.stat-card i { font-size: 24px; margin-bottom: 10px; display: block; }
+.stat-card .num { font-size: 24px; font-weight: bold; display: block; color: #2c3e50; }
+.stat-card .label { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
+.search-container { position: relative; margin-top: 15px; }
+.search-container i { position: absolute; left: 12px; top: 20px; color: #bdc3c7; }
+.search-container input { padding-left: 35px; }
+.poem-item{ background:#fff; border-left:5px solid #ddd; margin-top:10px; padding:12px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: background 0.2s; }
+.poem-item:hover { background: #fdfdfd; }
+.completed{ border-left-color:#27ae60; }
+.modal{ display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,.5); justify-content:center; align-items:center; z-index: 1000; }
+.modal-content{ background:white; width:95%; max-width:500px; padding:25px; border-radius:15px; max-height:90vh; overflow:auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-weight: bold; color: #34495e; margin-bottom: 5px; font-size: 15px; }
+.form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+.form-header h2 { margin: 0; font-size: 18px; color: #2c3e50; }
+.form-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+.close{ cursor:pointer; font-size:24px; color: #95a5a6; }
+.item-actions { display: flex; gap: 5px; }
+.item-edit-icon { color: #3498db; padding: 5px 8px; cursor: pointer; }
+.item-edit-icon:hover { color: #2980b9; }
+.item-delete-icon { color: #bbb; padding: 5px 8px; cursor: pointer; }
+.item-delete-icon:hover { color: #e74c3c; }
+.stats-bar-bg { height: 6px; background: #eee; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.stats-bar-fill { height: 100%; background: #27ae60; width: 0%; transition: width 0.3s ease; }
+.toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:12px 20px; border-radius:30px; opacity:0; transition:.3s; z-index: 9999; }
+.toast.show{ opacity:1; }
+.storage-card { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+/* 新增：行内批量删除面板 */
+.batch-panel {
+    margin-top: 20px;
+    background: #fef9e6;
+    border: 1px solid #f1c40f;
+    border-radius: 12px;
+    padding: 15px;
+    display: none;
+}
+.batch-panel h4 { margin: 0 0 10px 0; }
+.batch-item { margin: 5px 0; }
+.batch-actions { margin-top: 15px; display: flex; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i class="fas fa-book-reader"></i> 智能古诗背诵系统</h1>
+    <input id="alistUrl" placeholder="AList地址">
+    <input id="alistUser" placeholder="账号">
+    <input id="alistPass" type="password" placeholder="密码">
+    <button class="success" onclick="initCloudSession('upload')">上传同步</button>
+    <button class="primary" onclick="initCloudSession('download')">访问数据</button>
+    <div id="syncStatus" style="margin-top:10px;">未连接云端</div>
+</div>
+
+<div class="panel">
+    <h3><i class="fas fa-chart-pie"></i> 学习统计</h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-book" style="color: #3498db;"></i>
+            <span class="num" id="statTotal">0</span>
+            <span class="label">总古诗数</span>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+            <span class="num" id="statDone">0</span>
+            <span class="label">已背诵</span>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-clock" style="color: #f39c12;"></i>
+            <span class="num" id="statTodo">0</span>
+            <span class="label">未背诵</span>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <select id="gradeSelect" onchange="renderList()">
+        <option value="1">一年级</option><option value="2">二年级</option><option value="3">三年级</option>
+        <option value="4">四年级</option><option value="5">五年级</option><option value="6">六年级</option>
+    </select>
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索古诗标题或作者..." oninput="renderList()">
+    </div>
+    <button class="primary" onclick="openAddModal()">添加古诗</button>
+    <button class="warning" onclick="exportData()">导出备份</button>
+    <button class="danger" onclick="showBatchDeletePanel()">批量删除</button>
+</div>
+
+<div class="panel">
+    <h3><i class="fas fa-chart-line"></i> 学习进度详情</h3>
+    <div id="gradeStatsPanel" style="margin-top:10px; display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:15px;"></div>
+</div>
+
+<div class="panel">
+    <h3>古诗目录</h3>
+    <div id="poemList"></div>
+</div>
+
+<!-- 新增：批量删除面板（行内，不使用模态框） -->
+<div id="batchPanel" class="batch-panel">
+    <h4><i class="fas fa-trash-alt"></i> 批量删除古诗</h4>
+    <div id="batchListContainer"></div>
+    <div class="batch-actions">
+        <button class="primary" onclick="selectAllBatch(true)">全选</button>
+        <button class="warning" onclick="selectAllBatch(false)">取消全选</button>
+        <button class="danger" onclick="confirmBatchDelete()">确认删除</button>
+        <button class="primary" onclick="hideBatchDeletePanel()">关闭</button>
+    </div>
+</div>
+
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div class="form-header">
+            <h2 id="modalTitle"><i class="fas fa-plus-circle"></i> 添加/编辑古诗</h2>
+            <span class="close" onclick="closeModals()">×</span>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editPoemId">
+            <input type="hidden" id="editOldGrade">
+            <div class="form-group"><label>标题：</label><input id="editTitle" required></div>
+            <div class="form-group"><label>作者：</label><input id="editAuthor" required></div>
+            <div class="form-group">
+                <label>年级：</label>
+                <select id="editGrade">
+                    <option value="1">一年级</option><option value="2">二年级</option><option value="3">三年级</option>
+                    <option value="4">四年级</option><option value="5">五年级</option><option value="6">六年级</option>
+                </select>
+            </div>
+            <div class="form-group"><label>内容：</label><textarea id="editMain" rows="4" required></textarea></div>
+            <div class="form-group"><label>拼音：</label><textarea id="editPy" rows="3"></textarea></div>
+            <div class="form-group"><label>提示：</label><input id="editHint"></div>
+            <div class="form-footer">
+                <button type="button" class="danger" onclick="closeModals()">取消</button>
+                <button type="submit" class="success">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="poemModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModals()">×</span>
+        <h2 id="detTitle"></h2>
+        <div id="detAuthor"></div>
+        <div id="detContent"></div>
+        <div id="detHint"></div>
+        <button class="success" id="btnDone">完成背诵</button>
+        <button class="danger" onclick="markUnread()">标记未熟</button>
+    </div>
+</div>
+
+<div class="modal" id="storageModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModals()">×</span>
+        <h3>云端仓储</h3>
+        <div id="storageContainer"></div>
+        <button class="primary" onclick="goBackCloud()">返回上级</button>
+        <button class="success" id="btnConfirmStorage">确认</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let poems={"1":[],"2":[],"3":[],"4":[],"5":[],"6":[]};
+let progress={};
+let cachedToken="";
+let currentMode="";
+let currentCloudPath="/";
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.innerText=msg;
+    t.classList.add('show');
+    setTimeout(()=>{ t.classList.remove('show'); },2500);
+}
+
+function saveLocal(){
+    localStorage.setItem('localPoems', JSON.stringify(poems));
+    localStorage.setItem('localProgress', JSON.stringify(progress));
+    renderList();
+}
+
+function normalizeData() {
+    let changed = false;
+    for (let grade in poems) {
+        if (poems.hasOwnProperty(grade)) {
+            poems[grade].forEach(p => {
+                if (!p.id) {
+                    p.id = "id_" + Date.now().toString(36) + Math.random().toString(36).substring(2,8);
+                    changed = true;
+                } else {
+                    p.id = String(p.id);
+                }
+            });
+        }
+    }
+    let newProgress = {};
+    for (let key in progress) {
+        if (progress.hasOwnProperty(key)) {
+            newProgress[String(key)] = progress[key];
+        }
+    }
+    progress = newProgress;
+    if (changed) localStorage.setItem('localPoems', JSON.stringify(poems));
+}
+
+window.onload=()=>{
+    const lp=localStorage.getItem('localPoems');
+    if(lp) poems=JSON.parse(lp);
+    const pr=localStorage.getItem('localProgress');
+    if(pr) progress=JSON.parse(pr);
+    normalizeData();
+    renderList();
+};
+
+function renderList(){
+    const g = document.getElementById('gradeSelect').value;
+    const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+    const list = document.getElementById('poemList');
+    list.innerHTML='';
+    
+    (poems[g] || []).forEach((p, index) => {
+        if (p.title.toLowerCase().includes(keyword) || p.author.toLowerCase().includes(keyword)) {
+            const done = progress[p.id]?.status === 'completed';
+            const div = document.createElement('div');
+            div.className = 'poem-item ' + (done?'completed':'');
+            div.innerHTML = `
+                <div style="flex:1;"><strong>${escapeHtml(p.title)}</strong> - ${escapeHtml(p.author)}</div>
+                <div class="item-actions">
+                    <div class="item-edit-icon"><i class="fas fa-edit"></i></div>
+                    <div class="item-delete-icon"><i class="fas fa-trash-alt"></i></div>
+                </div>`;
+            div.onclick = () => showDetail(g, index);
+            div.querySelector('.item-edit-icon').onclick = (e) => { e.stopPropagation(); openEditModal(g, p.id); };
+            div.querySelector('.item-delete-icon').onclick = (e) => { e.stopPropagation(); deleteSinglePoem(g, p.id); };
+            list.appendChild(div);
+        }
+    });
+    renderStats();
+    updateMainStats();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function updateMainStats() {
+    let total = 0, done = 0;
+    for (let k in poems) {
+        total += poems[k].length;
+        poems[k].forEach(p => { if(progress[p.id]?.status === 'completed') done++; });
+    }
+    document.getElementById('statTotal').innerText = total;
+    document.getElementById('statDone').innerText = done;
+    document.getElementById('statTodo').innerText = total - done;
+}
+
+function renderStats() {
+    const container = document.getElementById('gradeStatsPanel');
+    container.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+        const total = (poems[i] || []).length;
+        const done = (poems[i] || []).filter(p => progress[p.id]?.status === 'completed').length;
+        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+        container.innerHTML += `<div style="background:#f8f9fa; padding:10px; border-radius:8px; border:1px solid #eef0f2;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#555;"><strong>${i}年级</strong><span>${done}/${total}</span></div>
+            <div class="stats-bar-bg"><div class="stats-bar-fill" style="width:${percent}%;"></div></div></div>`;
+    }
+}
+
+function deleteSinglePoem(g, id) {
+    const strId = String(id);
+    if (confirm("确定要删除这首古诗吗？")) {
+        if (poems[g]) poems[g] = poems[g].filter(p => String(p.id) !== strId);
+        delete progress[strId];
+        saveLocal();
+        showToast("已删除古诗");
+    }
+}
+
+// ========== 全新批量删除方案（不使用模态框和confirm） ==========
+function showBatchDeletePanel() {
+    const batchPanel = document.getElementById('batchPanel');
+    const container = document.getElementById('batchListContainer');
+    container.innerHTML = '';
+    let hasAny = false;
+    for (let g = 1; g <= 6; g++) {
+        const gradeKey = String(g);
+        if (!poems[gradeKey] || poems[gradeKey].length === 0) continue;
+        hasAny = true;
+        const gradeDiv = document.createElement('div');
+        gradeDiv.innerHTML = `<h5 style="margin:10px 0 5px;">${g}年级</h5>`;
+        poems[gradeKey].forEach(p => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'batch-item';
+            itemDiv.innerHTML = `<label><input type="checkbox" class="batch-cb" data-grade="${gradeKey}" data-id="${p.id}"> 《${escapeHtml(p.title)}》 - ${escapeHtml(p.author)}</label>`;
+            gradeDiv.appendChild(itemDiv);
+        });
+        container.appendChild(gradeDiv);
+    }
+    if (!hasAny) {
+        container.innerHTML = '<div style="color:#999;">暂无古诗数据，请先添加</div>';
+    }
+    batchPanel.style.display = 'block';
+}
+
+function hideBatchDeletePanel() {
+    document.getElementById('batchPanel').style.display = 'none';
+}
+
+function selectAllBatch(selectAll) {
+    const cbs = document.querySelectorAll('#batchListContainer .batch-cb');
+    cbs.forEach(cb => cb.checked = selectAll);
+}
+
+function confirmBatchDelete() {
+    const checkboxes = document.querySelectorAll('#batchListContainer .batch-cb:checked');
+    if (checkboxes.length === 0) {
+        showToast("请至少选择一首古诗");
+        return;
+    }
+    // 不使用 confirm，直接删除（如果想加询问，可以用自定义弹窗，但为了兼容，直接删除并提示）
+    // 如果您想要一个确认，可以取消注释下面一行（但注意App可能不支持confirm）
+    // if (!confirm(`确定删除 ${checkboxes.length} 首古诗吗？`)) return;
+    
+    // 收集要删除的映射
+    const deleteMap = new Map(); // grade -> Set(id)
+    checkboxes.forEach(cb => {
+        let grade = cb.getAttribute('data-grade');
+        let id = cb.getAttribute('data-id');
+        if (!grade || !id) return;
+        grade = String(grade);
+        id = String(id);
+        if (!deleteMap.has(grade)) deleteMap.set(grade, new Set());
+        deleteMap.get(grade).add(id);
+    });
+    
+    let totalDeleted = 0;
+    for (let [grade, idSet] of deleteMap.entries()) {
+        if (!poems[grade]) continue;
+        const originalLen = poems[grade].length;
+        poems[grade] = poems[grade].filter(p => {
+            const pid = String(p.id);
+            if (idSet.has(pid)) {
+                delete progress[pid];
+                return false;
+            }
+            return true;
+        });
+        totalDeleted += (originalLen - poems[grade].length);
+    }
+    
+    if (totalDeleted > 0) {
+        saveLocal();
+        hideBatchDeletePanel();
+        showToast(`成功删除 ${totalDeleted} 首古诗`);
+    } else {
+        showToast("未删除任何古诗");
+    }
+}
+// ========== 批量删除结束 ==========
+
+function showDetail(g,i){
+    const p=poems[g][i];
+    window.currentPoem=p;
+    document.getElementById('detTitle').innerText=p.title;
+    document.getElementById('detAuthor').innerText=p.author;
+    let html='';
+    const lines=p.content.split('\n'), pys=(p.content_pinyin||'').split('\n');
+    lines.forEach((l,idx)=>{ html+=`<div style="margin-top:15px;"><div style="color:#e74c3c;">${pys[idx]||''}</div><div style="font-size:22px;">${escapeHtml(l)}</div></div>`; });
+    document.getElementById('detContent').innerHTML=html;
+    document.getElementById('detHint').innerHTML= p.hint ? `<hr>${escapeHtml(p.hint)}` : '';
+    document.getElementById('poemModal').style.display='flex';
+    document.getElementById('btnDone').onclick=()=>{ progress[p.id]={status:'completed', date:new Date().toISOString()}; saveLocal(); closeModals(); };
+}
+
+function markUnread(){ if(window.currentPoem) delete progress[window.currentPoem.id]; saveLocal(); closeModals(); }
+
+function openAddModal(){
+    document.getElementById('editForm').reset();
+    document.getElementById('editPoemId').value='';
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> 添加新古诗';
+    document.getElementById('editModal').style.display='flex';
+}
+
+function openEditModal(g, id){
+    const p = poems[g].find(x => String(x.id) === String(id));
+    if(!p) return;
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> 编辑古诗';
+    document.getElementById('editPoemId').value=p.id;
+    document.getElementById('editOldGrade').value=g;
+    document.getElementById('editTitle').value=p.title;
+    document.getElementById('editAuthor').value=p.author;
+    document.getElementById('editGrade').value=g;
+    document.getElementById('editMain').value=p.content;
+    document.getElementById('editPy').value=p.content_pinyin||'';
+    document.getElementById('editHint').value=p.hint||'';
+    document.getElementById('editModal').style.display='flex';
+}
+
+document.getElementById('editForm').onsubmit=(e)=>{
+    e.preventDefault();
+    const g = document.getElementById('editGrade').value;
+    const oldG = document.getElementById('editOldGrade').value;
+    let id = document.getElementById('editPoemId').value;
+    if (!id) id = "id_" + Date.now().toString(36) + Math.random().toString(36).substring(2,8);
+    else id = String(id);
+    const data = { 
+        id: id, 
+        title: document.getElementById('editTitle').value, 
+        author: document.getElementById('editAuthor').value, 
+        content: document.getElementById('editMain').value, 
+        content_pinyin: document.getElementById('editPy').value, 
+        hint: document.getElementById('editHint').value 
+    };
+    if (oldG && oldG !== g && poems[oldG]) poems[oldG] = poems[oldG].filter(x => String(x.id) !== id);
+    if (!poems[g]) poems[g] = [];
+    const idx = poems[g].findIndex(x => String(x.id) === id);
+    if (idx !== -1) poems[g][idx] = data;
+    else poems[g].push(data);
+    saveLocal();
+    closeModals();
+    showToast("保存成功");
+};
+
+function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+
+// 云端同步函数（不变）
+async function initCloudSession(mode){
+    currentMode=mode;
+    const url=document.getElementById('alistUrl').value.trim().replace(/\/$/,''), u=document.getElementById('alistUser').value, p=document.getElementById('alistPass').value;
+    try{
+        const res=await fetch(`${url}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+        const d=await res.json();
+        if(d.code!==200) throw d.message;
+        cachedToken=d.data.token;
+        document.getElementById('syncStatus').innerText='已连接';
+        fetchCloudList("/");
+        document.getElementById('storageModal').style.display='flex';
+    } catch(e){ alert("连接失败:"+e); }
+}
+
+async function fetchCloudList(path){
+    const url=document.getElementById('alistUrl').value.trim().replace(/\/$/,'');
+    const res=await fetch(`${url}/api/fs/list`,{method:'POST',headers:{'Authorization':cachedToken,'Content-Type':'application/json'},body:JSON.stringify({path,page:1,per_page:0})});
+    const d=await res.json();
+    currentCloudPath=path;
+    const con=document.getElementById('storageContainer');
+    con.innerHTML='';
+    d.data.content.forEach(f=>{
+        const div=document.createElement('div');
+        div.className='storage-card';
+        div.innerHTML=`<span>${f.name}</span><input type="radio" name="cloudItem" value="${f.name}">`;
+        div.onclick=()=>{ if(f.is_dir) fetchCloudList((path==="/"?"":path)+"/"+f.name); else div.querySelector('input').checked=true; };
+        con.appendChild(div);
+    });
+    document.getElementById('btnConfirmStorage').onclick=executeCloudAction;
+}
+
+function goBackCloud(){ if(currentCloudPath!=="/") fetchCloudList(currentCloudPath.split('/').slice(0,-1).join('/')||"/"); }
+
+async function executeCloudAction(){
+    const url=document.getElementById('alistUrl').value.trim().replace(/\/$/,''), sel=document.querySelector('input[name="cloudItem"]:checked');
+    if(currentMode==='upload'){
+        const blob=new Blob([JSON.stringify({poems,progress})],{type:'application/json'}), fd=new FormData();
+        fd.append('file',blob,'poem_data.json');
+        await fetch(`${url}/api/fs/form`,{method:'PUT',headers:{'Authorization':cachedToken,'File-Path':encodeURIComponent(currentCloudPath+'/poem_data.json')},body:fd});
+        showToast("同步成功");
+    } else if(sel) {
+        const dRes=await fetch(`${url}/api/fs/get`,{method:'POST',headers:{'Authorization':cachedToken,'Content-Type':'application/json'},body:JSON.stringify({path:(currentCloudPath==="/"?"":currentCloudPath)+"/"+sel.value})});
+        const d=await dRes.json(), fRes=await fetch(d.data.raw_url), fD=await fRes.json();
+        poems=fD.poems; progress=fD.progress;
+        normalizeData();
+        saveLocal(); closeModals(); showToast("导入成功");
+    }
+}
+
+function exportData(){
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify({poems,progress},null,2)],{type:'application/json'}));
+    a.download='poems_backup.json'; a.click();
+}
+</script>
+</body>
+</html>
