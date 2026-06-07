@@ -20,29 +20,29 @@
 			<key>PayloadDisplayName</key>
 			<string>PakePayload</string>
 			<key>PayloadIdentifier</key>
-			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-93D173010BBA</string>
+			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-FDD90D6A5A20</string>
 			<key>PayloadType</key>
 			<string>com.apple.webClip.managed</string>
 			<key>PayloadUUID</key>
-			<string>E0736409-C08F-4F54-86DA-93D173010BBA</string>
+			<string>E0736409-C08F-4F54-86DA-FDD90D6A5A20</string>
 			<key>PayloadVersion</key>
 			<integer>1</integer>
 			<key>Precomposed</key>
 			<false/>
 			<key>URL</key>
-			<string>http://s.jiaojuku.com/p/5xr9as</string>
+			<string>http://192.168.0.197:5244/d/天翼2714/古诗背诵打卡智能数据库/智能古诗背诵打卡智能系统.V1.0.html?sign=bacycbVLjsHd5VTVi9Cqn-8xXZkQzFvFHLoziD7N-Vg=:0</string>
 		</dict>
 	</array>
 	<key>PayloadDisplayName</key>
 	<string>智能古诗背诵系统</string>
 	<key>PayloadIdentifier</key>
-	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-93D173010BBA</string>
+	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-FDD90D6A5A20</string>
 	<key>PayloadRemovalDisallowed</key>
 	<false/>
 	<key>PayloadType</key>
 	<string>Configuration</string>
 	<key>PayloadUUID</key>
-	<string>6E3BF4EB-11D9-4F2E-8DE8-93D173010BBA</string>
+	<string>6E3BF4EB-11D9-4F2E-8DE8-FDD90D6A5A20</string>
 	<key>PayloadVersion</key>
 	<integer>1</integer>
 </dict>
