@@ -20,11 +20,11 @@
 			<key>PayloadDisplayName</key>
 			<string>PakePayload</string>
 			<key>PayloadIdentifier</key>
-			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-C17180B0CA71</string>
+			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-F625760D44F5</string>
 			<key>PayloadType</key>
 			<string>com.apple.webClip.managed</string>
 			<key>PayloadUUID</key>
-			<string>E0736409-C08F-4F54-86DA-C17180B0CA71</string>
+			<string>E0736409-C08F-4F54-86DA-F625760D44F5</string>
 			<key>PayloadVersion</key>
 			<integer>1</integer>
 			<key>Precomposed</key>
@@ -36,13 +36,13 @@
 	<key>PayloadDisplayName</key>
 	<string>智能古诗背诵系统</string>
 	<key>PayloadIdentifier</key>
-	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-C17180B0CA71</string>
+	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-F625760D44F5</string>
 	<key>PayloadRemovalDisallowed</key>
 	<false/>
 	<key>PayloadType</key>
 	<string>Configuration</string>
 	<key>PayloadUUID</key>
-	<string>6E3BF4EB-11D9-4F2E-8DE8-C17180B0CA71</string>
+	<string>6E3BF4EB-11D9-4F2E-8DE8-F625760D44F5</string>
 	<key>PayloadVersion</key>
 	<integer>1</integer>
 </dict>
