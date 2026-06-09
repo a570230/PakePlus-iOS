@@ -20,29 +20,29 @@
 			<key>PayloadDisplayName</key>
 			<string>PakePayload</string>
 			<key>PayloadIdentifier</key>
-			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-C491640D4E7E</string>
+			<string>com.apple.webClip.managed.E0736409-C08F-4F54-86DA-2CE978428CFF</string>
 			<key>PayloadType</key>
 			<string>com.apple.webClip.managed</string>
 			<key>PayloadUUID</key>
-			<string>E0736409-C08F-4F54-86DA-C491640D4E7E</string>
+			<string>E0736409-C08F-4F54-86DA-2CE978428CFF</string>
 			<key>PayloadVersion</key>
 			<integer>1</integer>
 			<key>Precomposed</key>
 			<false/>
 			<key>URL</key>
-			<string>https://gist.githubusercontent.com/yuwenytuo0526/af479b4ef589e0f41c679c000378195d/raw/fadfc6740765ce30be1f5bca30680d0d0b4cc9cb/index.html</string>
+			<string>https://htmlpreview.github.io/?https://gist.githubusercontent.com/yuwenytuo0526/af479b4ef589e0f41c679c000378195d/raw/fadfc6740765ce30be1f5bca30680d0d0b4cc9cb/index.html</string>
 		</dict>
 	</array>
 	<key>PayloadDisplayName</key>
 	<string>古诗背诵系统</string>
 	<key>PayloadIdentifier</key>
-	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-C491640D4E7E</string>
+	<string>com.pakeplus.ios.23014396-AA45-42E3-AB8D-2CE978428CFF</string>
 	<key>PayloadRemovalDisallowed</key>
 	<false/>
 	<key>PayloadType</key>
 	<string>Configuration</string>
 	<key>PayloadUUID</key>
-	<string>6E3BF4EB-11D9-4F2E-8DE8-C491640D4E7E</string>
+	<string>6E3BF4EB-11D9-4F2E-8DE8-2CE978428CFF</string>
 	<key>PayloadVersion</key>
 	<integer>1</integer>
 </dict>
